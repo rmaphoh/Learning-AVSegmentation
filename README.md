@@ -25,7 +25,7 @@ Code for ["Learning to Address Intra-segment Misclassification in Retinal Imagin
 
 ## Brief Background
 
-This repository aims at improving multi-class vessel segmentation performance in retinal fundus photograph by alleviating the intra-segment misclassification around the intersections. The research data sets in experiments include DRIVE-AV [<sup>1,2</sup>](#refer-anchor-1), LES-AV [<sup>3</sup>](#refer-anchor-1), and HRF-AV [<sup>4,5</sup>](#refer-anchor-1).
+This repository aims at improving multi-class vessel segmentation performance in retinal fundus photograph by alleviating the intra-segment misclassification around the intersections. The research data sets in experiments include DRIVE-AV [<sup>1,2</sup>](#refer-anchor-1), LES-AV [<sup>3</sup>](#refer-anchor-2), and HRF-AV [<sup>4,5</sup>](#refer-anchor-3).
     
 ![image](./imgs/Figure1.jpg)
 
@@ -34,7 +34,7 @@ This repository aims at improving multi-class vessel segmentation performance in
 There are a few strengths in this work:
 
 1. We strictly evaluate the method performance in multi-class segmentation manner, instead of only considering the classification accuracy (previous evaluation). Mean value and standard deviation are calculated to show robust performance in test.
-2. The GAN-based segmentation backbone is revised based on a SOTA vessel segmentation method [<sup>6</sup>](#refer-anchor-1).
+2. The GAN-based segmentation backbone is revised based on a SOTA vessel segmentation method [<sup>6</sup>](#refer-anchor-4).
 3. The binary-to-multi fusion network avoids directly learning on the ambiguous pixel label brought by intersections, achieving SOTA performance on multi-class vessel segmentation.
 4.  The code and algorithm are easily transferred to other medical  or natural linear segmentation fields.
 
@@ -87,7 +87,7 @@ $ sh test.sh
 
 | Test dataset  | Sensitivity        | ROC |    F1-score|  PR| MSE|
 | ------------- | ------------------ |-------------|------------|-----|----|
-| DRIVE-AV      | 69.87 $\pm$ 0.11     |     84.13 $\pm$ 0.05  |    70.03 $\pm$ 0.03        |  71.17 $\pm$ 0.03   |  3.09 $\pm$ 0.01  |
+| DRIVE-AV      | $69.87 \pm 0.11$     |     84.13 $\pm$ 0.05  |    70.03 $\pm$ 0.03        |  71.17 $\pm$ 0.03   |  3.09 $\pm$ 0.01  |
 | LES-AV        | 62.94 $\pm$ 0.93  |     81.03 $\pm$ 0.04        |    66.69 $\pm$ 0.47        |  68.71 $\pm$ 0.47   |  2.17 $\pm$ 0.05  |
 | HRF-AV        |       67.68 $\pm$ 1.57        |     83.44 $\pm$ 0.75        |       71.7 $\pm$ 0.44     |  73.96 $\pm$ 0.31   |  1.9 $\pm$ 0.01  |
 
@@ -106,15 +106,23 @@ $ sh test.sh
 - [ ] Toporlogical feature merging
 
 ## Reference 
+<div id="refer-anchor-1"></div>
+
 [1] [Staal J, Abràmoff M D, Niemeijer M, et al. Ridge-based vessel segmentation in color images of the retina[J]. IEEE transactions on medical imaging, 2004, 23(4): 501-509.](https://ieeexplore.ieee.org/abstract/document/1282003?casa_token=1MVkiY8kNwwAAAAA:t8d77cuJzNDA_iG88PNOxEXi0u6dT3qdxVwKPGXxDBH519xog-73mUAdAJ1ExQtLflikObEA)
 
 [2] [Hu Q, Abràmoff M D, Garvin M K. Automated separation of binary overlapping trees in low-contrast color retinal images[C]//International conference on medical image computing and computer-assisted intervention. Springer, Berlin, Heidelberg, 2013: 436-443.](https://link.springer.com/chapter/10.1007/978-3-642-40763-5_54)
 
+<div id="refer-anchor-2"></div>
+
 [3] [Orlando J I, Breda J B, Van Keer K, et al. Towards a glaucoma risk index based on simulated hemodynamics from fundus images[C]//International Conference on Medical Image Computing and Computer-Assisted Intervention. Springer, Cham, 2018: 65-73.](https://link.springer.com/chapter/10.1007/978-3-030-00934-2_8)
+
+<div id="refer-anchor-3"></div>
 
 [4] [Budai A, Bock R, Maier A, et al. Robust vessel segmentation in fundus images[J]. International journal of biomedical imaging, 2013, 2013.](https://www.hindawi.com/journals/ijbi/2013/154860/)
 
 [5] [Hemelings R, Elen B, Stalmans I, et al. Artery–vein segmentation in fundus images using a fully convolutional network[J]. Computerized Medical Imaging and Graphics, 2019, 76: 101636.](https://www.sciencedirect.com/science/article/pii/S0895611118306025)
+
+<div id="refer-anchor-4"></div>
 
 [6] [Zhou Y, Chen Z, Shen H, et al. A refined equilibrium generative adversarial network for retinal vessel segmentation[J]. Neurocomputing, 2021, 437: 118-130..](https://www.sciencedirect.com/science/article/abs/pii/S0925231221001004)
 
