@@ -19,6 +19,7 @@ Code for ["Learning to Address Intra-segment Misclassification in Retinal Imagin
   - [Performance](#performance)
   - [To do list](#to-do-list)
   - [Reference](#reference)
+  - [Citation](#citation)
   - [Contact](#contact)
 
 &nbsp;
@@ -126,6 +127,12 @@ $ sh test.sh
 
 [6] [Zhou Y, Chen Z, Shen H, et al. A refined equilibrium generative adversarial network for retinal vessel segmentation[J]. Neurocomputing, 2021, 437: 118-130..](https://www.sciencedirect.com/science/article/abs/pii/S0925231221001004)
 
+&nbsp;
+## Citation
+
+```
+Coming soon
+```
 
 ## Contact
 
