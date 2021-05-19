@@ -272,8 +272,8 @@ def train_net(net_G,
 
                 pbar.update(imgs.shape[0])
                 global_step += 1
-                #if global_step % (100*n_train // ( batch_size)) == 0:
-                if True:
+                if global_step % (n_train // ( batch_size)) == 0:
+                #if True:
                     acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse, iou,_ = eval_net(epoch, net_G, net_G_A, net_G_V, val_loader, device, mode='whole',train_or='train')[0:11]
 
                     scheduler_G.step(G_Loss.item())
