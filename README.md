@@ -28,9 +28,9 @@ Code for ["TBD"]
 ## Brief Background
 
 This repository aims at improving multi-class vessel segmentation performance in retinal fundus photograph by alleviating the intra-segment misclassification around the intersections. The research data sets in experiments include DRIVE-AV [<sup>1,2</sup>](#refer-anchor-1), LES-AV [<sup>3</sup>](#refer-anchor-2), and HRF-AV [<sup>4,5</sup>](#refer-anchor-3).
-    
+<!--Code 
 ![image](./imgs/Figure1.jpg)
-
+-->
 ## Advantages
 
 There are a few strengths in this work:
@@ -85,6 +85,7 @@ The pretrained model are provided in [DRIVE](). Download them and place them dir
 $ sh test.sh
 ```
 &nbsp;
+<!--Code 
 ## Performance
 
 | Test dataset  | Sensitivity        | ROC |    F1-score|  PR| MSE|
@@ -92,12 +93,12 @@ $ sh test.sh
 | DRIVE-AV      | 69.87 &pm; 0.11     |     84.13 &pm; 0.05  |    70.03 &pm; 0.03        |  71.17 &pm; 0.03   |  3.09 &pm; 0.01  |
 | LES-AV        | 62.94 &pm; 0.93  |     81.03 &pm; 0.04        |    66.69 &pm; 0.47        |  68.71 &pm; 0.47   |  2.17 &pm; 0.05  |
 | HRF-AV        |       67.68 &pm; 1.57        |     83.44 &pm; 0.75        |       71.7 &pm; 0.44     |  73.96 &pm; 0.31   |  1.9 &pm; 0.01  |
-
+-->
 &nbsp;
 &nbsp;
-
+<!--Code 
 ![image](./imgs/Figure2.jpg)
-
+-->
 ## To do list
 
 - [ ] Include more datasets  
