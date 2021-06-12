@@ -101,9 +101,7 @@ $ sh test.sh
 ## To do list
 
 - [ ] Include more datasets  
-- [ ] Attach paper link
 - [ ] Share pretrained models 
-- [ ] Sort out the compared methods
 - [ ] Embed vessel segmentation 
 - [ ] Toporlogical feature merging
 
