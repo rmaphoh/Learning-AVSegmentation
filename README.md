@@ -84,7 +84,7 @@ The pretrained model are provided in [DRIVE](). Download them and place them dir
 $ sh test.sh
 ```
 &nbsp;
-<!--Code 
+ 
 ## Performance
 
 | Test dataset  | Sensitivity        | ROC |    F1-score|  PR| MSE|
@@ -92,7 +92,7 @@ $ sh test.sh
 | DRIVE-AV      | 69.87 &pm; 0.11     |     84.13 &pm; 0.05  |    70.03 &pm; 0.03        |  71.17 &pm; 0.03   |  3.09 &pm; 0.01  |
 | LES-AV        | 62.94 &pm; 0.93  |     81.03 &pm; 0.04        |    66.69 &pm; 0.47        |  68.71 &pm; 0.47   |  2.17 &pm; 0.05  |
 | HRF-AV        |       67.68 &pm; 1.57        |     83.44 &pm; 0.75        |       71.7 &pm; 0.44     |  73.96 &pm; 0.31   |  1.9 &pm; 0.01  |
--->
+
 &nbsp;
 &nbsp;
 <!--Code 
@@ -102,7 +102,6 @@ $ sh test.sh
 
 - [ ] Include more datasets  
 - [ ] Share pretrained models 
-- [ ] Embed vessel segmentation 
 - [ ] Toporlogical feature merging
 
 ## Reference 
