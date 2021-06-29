@@ -73,12 +73,12 @@ All checkpoints will be saved in a new folder named with dataset name, e.g., `./
 ```sh
 $ sh test.sh
 ```
-The segmentation maps are saved in path `./Final_pre`. The `raw_pre` folder includes the images with the same size of raw images while `small_pre` folder contains resized images.
+The segmentation maps are saved in path `.Dataset_name/Final_pre`, e.g., `.HRF-AV/Final_pre`. The `raw_pre` folder includes the images with the same size of raw images while `small_pre` folder contains resized images.
 
 
 ### Pretrained Model
 
-The pretrained model are provided in [DRIVE](). Download them and place them directly at the project folder. Then run
+The pretrained model are provided in [DRIVE_folder](). Download them and place them directly at the project folder. Then run
 
 ```sh
 $ sh test.sh
