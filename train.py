@@ -118,8 +118,7 @@ def train_net(net_G,
                 optimizer_D.zero_grad()
                 real_patch = torch.cat([imgs, true_masks_a], dim=1)
                 real_predict_D = net_D(real_patch)
-                real_predict_D_sigmoid = torch.sigmoid(real_predict_D)
-                loss_adv_CE_real = L_adv_BCE(real_predict_D_sigmoid, real_labels)
+                loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
                 #########################
                 
@@ -128,7 +127,7 @@ def train_net(net_G,
                 fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid_A], dim=1)
                 fake_predict_D = net_D(fake_patch_D)
                 fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D)
-                loss_adv_CE_fake = L_adv_BCE(fake_predict_D_sigmoid, fake_labels)
+                loss_adv_CE_fake = L_adv_BCE(fake_predict_D, fake_labels)
                 loss_adv_CE_fake.backward()
 
                 D_Loss = (loss_adv_CE_real + loss_adv_CE_fake)
@@ -143,8 +142,7 @@ def train_net(net_G,
                 optimizer_D.zero_grad()
                 real_patch = torch.cat([imgs, true_masks_v], dim=1)
                 real_predict_D = net_D(real_patch)
-                real_predict_D_sigmoid = torch.sigmoid(real_predict_D)
-                loss_adv_CE_real = L_adv_BCE(real_predict_D_sigmoid, real_labels)
+                loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
                 #########################
                 
@@ -153,7 +151,7 @@ def train_net(net_G,
                 fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid_V], dim=1)
                 fake_predict_D_V = net_D(fake_patch_D)
                 fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D_V)
-                loss_adv_CE_fake = L_adv_BCE(fake_predict_D_sigmoid, fake_labels)
+                loss_adv_CE_fake = L_adv_BCE(fake_predict_D_V, fake_labels)
                 loss_adv_CE_fake.backward()
 
                 D_Loss = (loss_adv_CE_real + loss_adv_CE_fake)
@@ -168,8 +166,7 @@ def train_net(net_G,
                 optimizer_D.zero_grad()
                 real_patch = torch.cat([imgs, true_masks], dim=1)
                 real_predict_D = net_D(real_patch)
-                real_predict_D_sigmoid = torch.sigmoid(real_predict_D)
-                loss_adv_CE_real = L_adv_BCE(real_predict_D_sigmoid, real_labels)
+                loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
 
                 #########################
@@ -181,7 +178,7 @@ def train_net(net_G,
                 fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid], dim=1)
                 fake_predict_D = net_D(fake_patch_D)
                 fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D)
-                loss_adv_CE_fake = L_adv_BCE(fake_predict_D_sigmoid, fake_labels)
+                loss_adv_CE_fake = L_adv_BCE(fake_predict_D, fake_labels)
 
                 loss_adv_CE_fake.backward()
                 D_Loss = (loss_adv_CE_real + loss_adv_CE_fake)
@@ -201,7 +198,7 @@ def train_net(net_G,
                 fake_predict_G = net_D(fake_patch_G)
                 fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
 
-                loss_adv_G_fake = L_adv_BCE(fake_predict_G_sigmoid, real_labels)
+                loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
                 loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks_a.flatten(start_dim=1, end_dim=3))
                 loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid_A, true_masks_a)
 
@@ -221,7 +218,7 @@ def train_net(net_G,
                 fake_predict_G = net_D(fake_patch_G)
                 fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
 
-                loss_adv_G_fake = L_adv_BCE(fake_predict_G_sigmoid, real_labels)
+                loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
                 loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks_v.flatten(start_dim=1, end_dim=3))
                 loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid_V, true_masks_v)
                 G_Loss = gama_hyper*loss_adv_G_fake + beta_hyper*loss_seg_CE + alpha_hyper*loss_seg_MSE 
@@ -245,7 +242,7 @@ def train_net(net_G,
                 fake_predict_G = net_D(fake_patch_G)
                 fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
 
-                loss_adv_G_fake = L_adv_BCE(fake_predict_G_sigmoid, real_labels)
+                loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
                 loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
                 loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid, true_masks)
                 # S1 output
@@ -274,7 +271,7 @@ def train_net(net_G,
                 global_step += 1
                 if global_step % (n_train // ( batch_size)) == 0:
                 #if True:
-                    acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse, iou,_ = eval_net(epoch, net_G, net_G_A, net_G_V, val_loader, device, mode='whole',train_or='train')[0:11]
+                    acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse, iou,_ = eval_net(epoch, net_G, net_G_A, net_G_V, args.dataset, val_loader, device, mode='whole',train_or='train')[0:11]
 
                     scheduler_G.step(G_Loss.item())
                     scheduler_D.step(D_Loss.item())

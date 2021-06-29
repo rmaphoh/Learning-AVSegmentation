@@ -13,13 +13,19 @@ from torchvision.utils import save_image
 import os
 
 
-def pixel_values_in_mask(true_vessels, pred_vessels, mask, train_or):
+def pixel_values_in_mask(true_vessels, pred_vessels, mask, train_or, dataset):
 
     if train_or=='val':
         true_vessels = np.squeeze(true_vessels)
         pred_vessels = np.squeeze(pred_vessels)
-        true_vessels = (true_vessels[mask[0,...] != 0])
-        pred_vessels = (pred_vessels[mask[0,...] != 0])
+
+        if dataset=='HRF-AV':
+            true_vessels = (true_vessels[mask[0,...] != 0])
+            pred_vessels = (pred_vessels[mask[0,...] != 0])
+        else:
+            true_vessels = (true_vessels[mask!= 0])
+            pred_vessels = (pred_vessels[mask!= 0])
+        
         assert np.max(pred_vessels)<=1.0 and np.min(pred_vessels)>=0.0
         assert np.max(true_vessels)==1.0 and np.min(true_vessels)==0.0
 
@@ -63,10 +69,17 @@ def misc_measures(true_vessel_arr, pred_vessel_arr):
         return 0,0,0,0,0,0,0,0
 
 
-def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
+def eval_net(epoch, net, net_a, net_v, dataset, loader, device, mode, train_or):
     """Evaluation without the densecrf with the dice coefficient"""
     net.eval()
-    image_size = (3504, 2336)
+    
+    print(dataset)
+    if dataset=='HRF-AV':
+        image_size = (3504, 2336)
+    elif dataset=='LES-AV':
+        image_size = (1620,1444)
+    else:
+        image_size = (592,592)        
     mask_type = torch.float32 if net.n_classes == 1 else torch.float32
     n_val = len(loader) 
     acc_a,sent_a,spet_a,pret_a,G_t_a,F1t_a,mset_a,iout_a,auc_roct_a,auc_prt_a=0,0,0,0,0,0,0,0,0,0
@@ -76,8 +89,8 @@ def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
 
     num = 0
     
-    seg_results_small_path = './Final_pre/small_pre/'
-    seg_results_raw_path = './Final_pre/raw_pre/'
+    seg_results_small_path = dataset + '/Final_pre/small_pre/'
+    seg_results_raw_path = dataset + '/Final_pre/raw_pre/'
     
     if not os.path.isdir(seg_results_small_path):
         os.makedirs(seg_results_small_path)
@@ -114,10 +127,17 @@ def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
                 if train_or=='val':
                 
                     save_image(mask_pred_tensor_small, seg_results_small_path+ img_name+ '.png')
-                    mask_pred_img = Image.open(seg_results_small_path+ img_name + '.png').resize((image_size))                
+                    if dataset!='DRIVE_AV':
+                        mask_pred_img = Image.open(seg_results_small_path+ img_name + '.png').resize((image_size)) 
+                    else:
+                        mask_pred_img = Image.open(seg_results_small_path+ img_name + '.png')           
                     mask_pred = torchvision.transforms.ToTensor()(mask_pred_img)
                     mask_pred = torch.unsqueeze(mask_pred, 0)
-                    mask_pred[mask== 0]=0
+                    
+                    if dataset!='HRF-AV':
+                        mask_pred[mask.repeat(1, 3, 1, 1)== 0]=0
+                    else:
+                        mask_pred[mask == 0]=0                        
                     save_image(mask_pred, seg_results_raw_path + img_name+ '.png')
             
 
@@ -172,7 +192,7 @@ def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
                 ##########################################
                 #artery
                 #######################################
-                encoded_gt_vessel_point_a, encoded_pred_vessel_point_a = pixel_values_in_mask(encoded_gt_a, encoded_pred_a, mask_cpu, train_or)
+                encoded_gt_vessel_point_a, encoded_pred_vessel_point_a = pixel_values_in_mask(encoded_gt_a, encoded_pred_a, mask_cpu, train_or, dataset)
 
                 auc_roc_a=AUC_ROC(encoded_gt_vessel_point_a,encoded_pred_vessel_point_a)
                 auc_pr_a=AUC_PR(encoded_gt_vessel_point_a, encoded_pred_vessel_point_a)
@@ -194,7 +214,7 @@ def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
                 ##########################################
                 #vein
                 #######################################
-                encoded_gt_vessel_point_v, encoded_pred_vessel_point_v = pixel_values_in_mask(encoded_gt_v, encoded_pred_v, mask_cpu, train_or)
+                encoded_gt_vessel_point_v, encoded_pred_vessel_point_v = pixel_values_in_mask(encoded_gt_v, encoded_pred_v, mask_cpu, train_or, dataset)
 
                 auc_roc_v=AUC_ROC(encoded_gt_vessel_point_v,encoded_pred_vessel_point_v)
                 auc_pr_v=AUC_PR(encoded_gt_vessel_point_v, encoded_pred_vessel_point_v)
@@ -216,7 +236,7 @@ def eval_net(epoch, net, net_a, net_v, loader, device, mode, train_or):
                 ##########################################
                 #uncertainty
                 #######################################
-                encoded_gt_vessel_point_u, encoded_pred_vessel_point_u = pixel_values_in_mask(encoded_gt_u, encoded_pred_u, mask_cpu,train_or )
+                encoded_gt_vessel_point_u, encoded_pred_vessel_point_u = pixel_values_in_mask(encoded_gt_u, encoded_pred_u, mask_cpu,train_or, dataset)
 
                 auc_roc_u=AUC_ROC(encoded_gt_vessel_point_u,encoded_pred_vessel_point_u)
                 auc_pr_u=AUC_PR(encoded_gt_vessel_point_u, encoded_pred_vessel_point_u)

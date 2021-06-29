@@ -57,14 +57,16 @@ class LearningAVSegData(Dataset):
 
     @classmethod
     def preprocess(self, pil_img, label, mask, dataset_name, img_size, train_or):
-        #w, h = pil_img.size
+
         newW, newH = img_size[0], img_size[1]
         assert newW > 0 and newH > 0, 'Scale is too small'
-        #pil_img = pil_img.resize((newW, newH))
 
         img_array = np.array(pil_img)
         label_array = np.array(label)/255
-        mask_array = np.array(mask)/255
+        if dataset_name=='LES-AV':
+            mask_array = np.array(mask)
+        else:
+            mask_array = np.array(mask)/255  
 
         if dataset_name=='DRIVE_AV':
             img_array = self.pad_imgs(img_array, img_size)
@@ -129,9 +131,14 @@ class LearningAVSegData(Dataset):
             img = Image.open(img_file[0]).resize(self.img_size)
             mask = Image.open(mask_file[0]).resize(self.img_size)
         else:
-            label = Image.open(label_file[0])
-            img = Image.open(img_file[0]).resize(self.img_size)
-            mask = Image.open(mask_file[0])
+            if self.dataset_name!='DRIVE_AV':
+                label = Image.open(label_file[0])
+                img = Image.open(img_file[0]).resize(self.img_size)
+                mask = Image.open(mask_file[0])
+            else:
+                label = Image.open(label_file[0])
+                img = Image.open(img_file[0])
+                mask = Image.open(mask_file[0])
 
         img, label, mask = self.preprocess(img, label, mask, self.dataset_name, self.img_size, self.train_or)
         i += 1

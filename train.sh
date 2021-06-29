@@ -17,7 +17,7 @@ CUDA_VISIBLE_DEVICES=0 python train.py --e=1500 \
                                         --gama=0.08 \
                                         --dataset=${dataset_name} \
                                         --discriminator='unet' \
-                                        --job_name=20210420_${dataset_name}_randomseed_${seed_number} \
+                                        --job_name=20210628_${dataset_name}_randomseed_${seed_number} \
                                         --uniform=False \
                                         --seed_num=${seed_number}
 

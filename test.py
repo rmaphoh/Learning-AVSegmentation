@@ -18,7 +18,7 @@ import pandas as pd
 from scripts.utils import Define_image_size
 
 
-def test_net(img_save, net_all, net_a, net_v, loader, device, mode):
+def test_net(net_all, net_a, net_v, loader, device, mode, dataset):
 
     epoch = 0
 
@@ -27,11 +27,11 @@ def test_net(img_save, net_all, net_a, net_v, loader, device, mode):
         acc, sent, spet, pret, G_t, F1t, auc_roct, auc_prt, mset, iout, \
             acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, auc_roct_a, auc_prt_a, mset_a, iout_a, \
                 acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, auc_roct_v, auc_prt_v, mset_v, iout_v, \
-                    acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u  = eval_net(epoch, net_all, net_a, net_v, loader=loader, device=device, mode = mode, train_or='val')
+                    acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u  = eval_net(epoch, net_all, net_a, net_v, dataset, loader=loader, device=device, mode = mode, train_or='val')
     else:
 
-        acc, sensitivity, specificity, precision, G, F1_score_2 = eval_net(epoch, net_all, net_a, net_v, loader=loader, device=device, mask=True, mode='vessel')
-    print('Accuracy: ', tot)
+        acc, sensitivity, specificity, precision, G, F1_score_2 = eval_net(epoch, net_all, net_a, net_v, dataset, loader=loader, device=device, mask=True, mode='vessel')
+    print('Accuracy: ', acc)
     print('Sensitivity: ', sent)
     print('specificity: ', spet)
     print('precision: ', pret)
@@ -77,21 +77,16 @@ if __name__ == '__main__':
     logging.info(f'Using device {device}')
 
     img_size = Define_image_size(args.uniform, args.dataset)
-    dataset = args.dataset
-
-    date_info = '20210228_alldata_randomseed_42'
-    checkpoint_saved = dataset + '/' +args.jn + '/Discriminator_unet/'
-    img_save = 'Net_output/' + args.jn
+    dataset_name = args.dataset
+    checkpoint_saved = dataset_name + '/' +args.jn + '/Discriminator_unet/'
     csv_save = 'test_csv/' + args.jn
 
-    if not os.path.isdir(img_save):
-        os.makedirs(img_save)
     if not os.path.isdir(csv_save):
         os.makedirs(csv_save)
 
-    test_dir= "./data/{}/test/images/".format(dataset)
-    test_label = "./data/{}/test/1st_manual/".format(dataset)
-    test_mask =  "./data/{}/test/mask/".format(dataset)
+    test_dir= "./data/{}/test/images/".format(dataset_name)
+    test_label = "./data/{}/test/1st_manual/".format(dataset_name)
+    test_mask =  "./data/{}/test/mask/".format(dataset_name)
 
     mode = 'whole'
 
@@ -139,14 +134,14 @@ if __name__ == '__main__':
     mse_total = []
     iou_total = []
 
-dataset = LearningAVSegData(test_dir, test_label, test_mask, img_size, dataset_name=dataset, train_or=False)
+dataset = LearningAVSegData(test_dir, test_label, test_mask, img_size, dataset_name=dataset_name, train_or=False)
 test_loader = DataLoader(dataset, batch_size=args.batchsize, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
 net_G = Generator_main(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
 net_G_A = Generator_branch(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
 net_G_V = Generator_branch(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
 
 
-for i in range(3):
+for i in range(10):
     net_G.load_state_dict(torch.load(  checkpoint_saved + 'CP_epoch{}_all.pth'.format(args.CS+10*i)))
     net_G_A.load_state_dict(torch.load( checkpoint_saved + 'CP_epoch{}_A.pth'.format(args.CS+10*i)))
     net_G_V.load_state_dict(torch.load(checkpoint_saved + 'CP_epoch{}_V.pth'.format(args.CS+10*i)))
@@ -161,7 +156,7 @@ for i in range(3):
         acc, sent, spet, pret, G_t, F1t, auc_roct, auc_prt, mset, iout, \
             acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, auc_roct_a, auc_prt_a, mset_a, iout_a, \
             acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, auc_roct_v, auc_prt_v, mset_v, iout_v, \
-            acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u = test_net(img_save, net_all=net_G, net_a=net_G_A, net_v=net_G_V, loader=test_loader, device=device, mode=mode)
+            acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u = test_net(net_all=net_G, net_a=net_G_A, net_v=net_G_V, loader=test_loader, device=device, mode=mode,dataset=dataset_name)
 
 #########################################3
     acc_total_a.append(acc_a)
@@ -344,9 +339,4 @@ if mode != 'vessel':
     print('auc_pr: ', np.mean(auc_pr_total))
     print('auc_roc: ', np.std(auc_roc_total))
     print('auc_pr: ', np.std(auc_pr_total))
-
-
-
-
-
 
