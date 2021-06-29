@@ -27,9 +27,9 @@
 ## Brief Background
 
 This repository aims at improving multi-class vessel segmentation performance in retinal fundus photograph by alleviating the intra-segment misclassification around the intersections. The research data sets in experiments include DRIVE-AV [<sup>1,2</sup>](#refer-anchor-1), LES-AV [<sup>3</sup>](#refer-anchor-2), and HRF-AV [<sup>4,5</sup>](#refer-anchor-3).
-<!--Code 
+
 ![image](./imgs/Figure1.jpg)
--->
+
 ## Advantages
 
 There are a few strengths in this work:
