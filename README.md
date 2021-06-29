@@ -78,7 +78,7 @@ The segmentation maps are saved in path `.Dataset_name/Final_pre`, e.g., `.HRF-A
 
 ### Pretrained Model
 
-The pretrained model are provided in [DRIVE_folder](). Download them and place them directly at the project folder. Then run
+The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing) and [Baidu_disk](https://pan.baidu.com/s/12QVrza5seZ63_80Ma26Wtg) with password `tkum`. Download them and place them directly at the project folder (check the load path in test.sh). Then run
 
 ```sh
 $ sh test.sh
@@ -87,11 +87,11 @@ $ sh test.sh
  
 ## Performance
 
-| Test dataset  | Sensitivity        | ROC |    F1-score|  PR| MSE|
+| Test dataset  | Sensitivity        | AUC-ROC |    F1-score|  AUC-PR| MSE|
 | ------------- | ------------------ |-------------|------------|-----|----|
-| DRIVE-AV      | 69.87 &pm; 0.11     |     84.13 &pm; 0.05  |    70.03 &pm; 0.03        |  71.17 &pm; 0.03   |  3.09 &pm; 0.01  |
-| LES-AV        | 62.94 &pm; 0.93  |     81.03 &pm; 0.04        |    66.69 &pm; 0.47        |  68.71 &pm; 0.47   |  2.17 &pm; 0.05  |
-| HRF-AV        |       67.68 &pm; 1.57        |     83.44 &pm; 0.75        |       71.7 &pm; 0.44     |  73.96 &pm; 0.31   |  1.9 &pm; 0.01  |
+| DRIVE-AV      | 70.8 &pm; 0.1     |     84.7 &pm; 0.05  |    71.99 &pm; 0.04        |  73.06 &pm; 0.03   |  2.85 &pm; 0.01  |
+| LES-AV        | 64.41 &pm; 0.09  |     81.72 &pm; 0.04        |    67.22 &pm; 0.06        |  69.08 &pm; 0.06   |  2.22 &pm; 0.01  |
+| HRF-AV        |       71.85 &pm; 0.29        |     85.38 &pm; 0.13        |       71.92 &pm; 0.03     |  73.23 &pm; 0.03   |  2 &pm; 0.01  |
 
 &nbsp;
 &nbsp;
