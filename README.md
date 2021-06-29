@@ -45,7 +45,7 @@ There are a few strengths in this work:
 
 ### Requirements
 
-1. Both work on Linux and Windows, but Linux is preferred to replicate the reported performance.
+1. Work on Linux and Windows, but Linux is preferred to replicate the reported performance.
 2. This project is based on pytorch==1.6.0, torchvision==0.7.0, CUDAToolkit==10.1(10.2 is capable), cuDNN==7.5.0
 3. A GPU is essential. In our work, we utilise one Tesla T4 with 15 GB of DRAM. If with weaker GPU, we suggest to change the image size setting in `scripts.utils.py`
 
@@ -101,8 +101,14 @@ $ sh test.sh
 ## To do list
 
 - [ ] Include more datasets  
-- [ ] Share pretrained models 
 - [ ] Toporlogical feature merging
+
+
+## Citation
+<div id="refer-anchor-1"></div>
+
+[1] [Zhou Y, Xu M, Hu Y, et al. Learning to Address Intra-segment Misclassification in Retinal Imaging[J]. arXiv preprint arXiv:2104.12138, 2021.](https://arxiv.org/abs/2104.12138)
+
 
 ## Reference 
 <div id="refer-anchor-1"></div>
@@ -126,11 +132,6 @@ $ sh test.sh
 [6] [Zhou Y, Chen Z, Shen H, et al. A refined equilibrium generative adversarial network for retinal vessel segmentation[J]. Neurocomputing, 2021, 437: 118-130..](https://www.sciencedirect.com/science/article/abs/pii/S0925231221001004)
 
 &nbsp;
-## Citation
-<div id="refer-anchor-1"></div>
-
-[1] [Zhou Y, Xu M, Hu Y, et al. Learning to Address Intra-segment Misclassification in Retinal Imaging[J]. arXiv preprint arXiv:2104.12138, 2021.](https://arxiv.org/abs/2104.12138)
-
 
 ## Contact
 
