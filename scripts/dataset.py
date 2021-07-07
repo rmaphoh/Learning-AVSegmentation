@@ -149,3 +149,83 @@ class LearningAVSegData(Dataset):
             'mask':torch.from_numpy(mask).type(torch.FloatTensor)
         }
 
+
+
+class LearningAVSegData_Out(Dataset):
+    def __init__(self, imgs_dir, img_size, dataset_name, train_or=True, mask_suffix=''):
+        self.imgs_dir = imgs_dir
+        self.mask_suffix = mask_suffix
+        self.img_size = img_size
+        self.dataset_name = dataset_name
+        self.train_or = train_or
+        
+        i = 0
+        self.ids = [splitext(file)[0] for file in listdir(imgs_dir)
+                    if not file.startswith('.')]
+        logging.info(f'Creating dataset with {(self.ids)} ')
+        logging.info(f'Creating dataset with {len(self.ids)} examples')
+
+    def __len__(self):
+        return len(self.ids)
+
+    @classmethod
+    def pad_imgs(self, imgs, img_size):
+        img_h,img_w=imgs.shape[0], imgs.shape[1]
+        target_h,target_w=img_size[0],img_size[1] 
+        if len(imgs.shape)==3:
+            d=imgs.shape[2]
+            padded=np.zeros((target_h, target_w,d))
+        elif len(imgs.shape)==2:
+            padded=np.zeros((target_h, target_w))
+        padded[(target_h-img_h)//2:(target_h-img_h)//2+img_h,(target_w-img_w)//2:(target_w-img_w)//2+img_w,...]=imgs
+        #print(np.shape(padded))
+        return padded
+
+    @classmethod
+    def random_perturbation(self,imgs):
+        for i in range(imgs.shape[0]):
+            im=Image.fromarray(imgs[i,...].astype(np.uint8))
+            en=ImageEnhance.Color(im)
+            im=en.enhance(random.uniform(0.8,1.2))
+            imgs[i,...]= np.asarray(im).astype(np.float32)
+        return imgs 
+
+    @classmethod
+    def preprocess(self, pil_img, dataset_name, img_size, train_or):
+
+        newW, newH = img_size[0], img_size[1]
+        assert newW > 0 and newH > 0, 'Scale is too small'
+
+        img_array = np.array(pil_img)
+        mean=np.mean(img_array[img_array[...,0] > 00.0],axis=0)
+        std=np.std(img_array[img_array[...,0] > 00.0],axis=0)
+        img_array=(img_array-1.0*mean)/1.0*std
+
+            
+        if len(img_array.shape) == 2:
+            img_array = np.expand_dims(img_array, axis=2)
+
+        img_array = img_array.transpose((2, 0, 1))
+
+        return img_array
+
+
+    def __getitem__(self, i):
+
+        idx = self.ids[i]
+        img_file = glob(self.imgs_dir + idx + '.*')
+        
+
+        img = Image.open(img_file[0])
+        ori_width, ori_height = img.size
+        img = img.resize(self.img_size)
+
+        img= self.preprocess(img, self.dataset_name, self.img_size, self.train_or)
+        i += 1
+        return {
+            'name': idx,
+            'width': ori_width,
+            'height': ori_height,
+            'image': torch.from_numpy(img).type(torch.FloatTensor)
+        }
+
