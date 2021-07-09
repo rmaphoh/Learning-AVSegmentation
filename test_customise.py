@@ -13,7 +13,7 @@ import torch
 import numpy as np
 from tqdm import tqdm
 from scripts.model import Generator_main, Generator_branch
-from scripts.dataset import LearningAVSegData_OOD
+from scripts.dataset import LearningAVSegData_Out
 from torch.utils.data import DataLoader
 from torchvision.utils import save_image
 from PIL import Image

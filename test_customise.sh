@@ -12,8 +12,8 @@ CUDA_VISIBLE_DEVICES=0 python test_customise.py --batch-size=1 \
                                                 --job_name=20210628_${dataset_name}_randomseed_${seed_number} \
                                                 --checkstart=${test_checkpoint} \
                                                 --uniform=True \
-                                                --customise_data='./customise_image' \
-                                                --customise_output='./customise_output'
+                                                --customise_data='./customise_image/' \
+                                                --customise_output='./customise_output/'
 
 date
 
