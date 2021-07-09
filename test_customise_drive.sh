@@ -12,7 +12,7 @@ CUDA_VISIBLE_DEVICES=0 python test_customise.py --batch-size=1 \
                                                 --job_name=20210628_${dataset_name}_randomseed_${seed_number} \
                                                 --checkstart=${test_checkpoint} \
                                                 --uniform=True \
-                                                --customise_data='/content/drive/MyDrive/customise_image' \
+                                                --customise_data='/content/drive/MyDrive/customise_image/' \
                                                 --customise_output='/content/drive/MyDrive/customise_output/'
 
 date
