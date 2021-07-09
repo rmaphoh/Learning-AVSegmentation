@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
 
 
-dataset = LearningAVSegData_OOD(test_dir, img_size, dataset_name=dataset_name, train_or=False)
+dataset = LearningAVSegData_Out(test_dir, img_size, dataset_name=dataset_name, train_or=False)
 test_loader = DataLoader(dataset, batch_size=args.batchsize, shuffle=False, num_workers=2, pin_memory=True, drop_last=True)
 net_G = Generator_main(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
 net_G_A = Generator_branch(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
