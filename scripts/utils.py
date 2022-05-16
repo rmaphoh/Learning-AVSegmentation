@@ -9,7 +9,7 @@ import torchvision.transforms as transforms
 def Define_image_size(uniform, dataset):
     
     if uniform =='True':
-        img_size = (912,912)
+        img_size = (720,720)
     else:
         if dataset=='HRF-AV':
             img_size = (880,592)  
