@@ -138,7 +138,7 @@ $ sh test.sh
 ## Citation
 <div id="refer-anchor-1"></div>
 
-[1] [Zhou Y, Xu M, Hu Y, et al. Learning to Address Intra-segment Misclassification in Retinal Imaging[J]. arXiv preprint arXiv:2104.12138, 2021.](https://arxiv.org/abs/2104.12138)
+[1] [Zhou, Y., Xu, M., Hu, Y., Lin, H., Jacob, J., Keane, P.A. and Alexander, D.C., 2021, September. Learning to Address Intra-segment Misclassification in Retinal Imaging. In International Conference on Medical Image Computing and Computer-Assisted Intervention (pp. 482-492). Springer, Cham.](https://link.springer.com/chapter/10.1007/978-3-030-87193-2_46)
 
 &nbsp;
 
