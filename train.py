@@ -17,7 +17,7 @@ from scripts.utils import Define_image_size
 from scripts.dataset import LearningAVSegData
 from torch.utils.tensorboard import SummaryWriter
 from torch.utils.data import DataLoader, random_split
-
+import torch.nn.functional as F
 
 
 
@@ -55,7 +55,7 @@ def train_net(net_G,
     val_loader = DataLoader(val, batch_size=1, shuffle=False, num_workers=1, pin_memory=True, drop_last=False)
 
 
-    writer = SummaryWriter(comment=f'LR_{lr}_BS_{batch_size}')
+    writer = SummaryWriter(comment=f'Task_{args.jn}_LR_{lr}_BS_{batch_size}')
     global_step = 0
 
     logging.info(f'''Starting training:
@@ -77,9 +77,12 @@ def train_net(net_G,
     scheduler_G = optim.lr_scheduler.ReduceLROnPlateau(optimizer_G, 'min', factor=0.5, patience=50)
     scheduler_D = optim.lr_scheduler.ReduceLROnPlateau(optimizer_D, 'min', factor=0.5, patience=50)
 
-    L_seg_CE = nn.BCEWithLogitsLoss()
+    L_seg_CE = nn.CrossEntropyLoss()
     L_seg_MSE = nn.MSELoss()
     L_adv_BCE = nn.BCEWithLogitsLoss()
+    
+    best_F1 = 0
+    best_iou = 0
 
 
     for epoch in range(epochs):
@@ -96,9 +99,19 @@ def train_net(net_G,
                 imgs = batch['image']
                 true_masks = batch['label']
                 
-                [true_masks_a,_,true_masks_v] = torch.split(true_masks, split_size_or_sections=1, dim=1)
-                true_masks_a = torch.cat((true_masks_a,true_masks_a,true_masks_a), dim=1)
-                true_masks_v = torch.cat((true_masks_v,true_masks_v,true_masks_v), dim=1)
+                
+                #encode_tensor=torch.zeros(len(true_masks), true_masks.max()+1).scatter_(1, true_masks.unsqueeze(1), 1.)
+                encode_tensor=F.one_hot(true_masks.to(torch.int64), num_classes=4)
+                encode_tensor=encode_tensor.permute(0, 3, 1, 2).contiguous()
+                true_masks_background, true_masks_a_, true_masks_v_, true_mask_u_ = torch.split(encode_tensor, split_size_or_sections=1, dim=1)
+                
+                
+                true_masks_a = torch.cat((true_masks_background, true_masks_a_, true_masks_v_, true_mask_u_), dim=1)
+                true_masks_v = torch.cat((true_masks_background, true_masks_a_, true_masks_v_, true_mask_u_), dim=1)
+                
+                _,true_masks_a_decode=torch.max(true_masks_a, 1)
+                _,true_masks_v_decode=torch.max(true_masks_v, 1)
+                
 
                 assert imgs.shape[1] == net_G.n_channels, \
                     f'Network has been defined with {net_G.n_channels} input channels, ' \
@@ -106,27 +119,32 @@ def train_net(net_G,
                     'the images are loaded correctly.'
 
                 imgs = imgs.to(device=device, dtype=torch.float32)
-                mask_type = torch.float32 if net_G.n_classes == 1 else torch.float32
+                mask_type = torch.float32 if net_G.n_classes == 1 else torch.long
                 true_masks = true_masks.to(device=device, dtype=mask_type)
-                true_masks_a = true_masks_a.to(device=device, dtype=mask_type)
-                true_masks_v = true_masks_v.to(device=device, dtype=mask_type)
+                true_masks_a = true_masks_a.to(device=device, dtype=torch.float32)
+                true_masks_v = true_masks_v.to(device=device, dtype=torch.float32)
+                encode_tensor = encode_tensor.to(device=device, dtype=torch.float32)
+                true_masks_a_decode = true_masks_a_decode.to(device=device, dtype=mask_type)
+                true_masks_v_decode = true_masks_v_decode.to(device=device, dtype=mask_type)
 
-                real_labels = torch.ones((true_masks.size(0), 3, true_masks.size(2),true_masks.size(3))).to(device=device, dtype=torch.float32)
-                fake_labels = torch.zeros((true_masks.size(0), 3, true_masks.size(2),true_masks.size(3))).to(device=device, dtype=torch.float32)
+                real_labels = torch.ones((encode_tensor.shape)).to(device=device, dtype=torch.float32)
+                fake_labels = torch.zeros((encode_tensor.shape)).to(device=device, dtype=torch.float32)
 
                 #################### train D using true_masks_a ##########################
                 optimizer_D.zero_grad()
+                
                 real_patch = torch.cat([imgs, true_masks_a], dim=1)
                 real_predict_D = net_D(real_patch)
                 loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
                 #########################
                 
-                masks_pred_D = net_G_A(imgs)
-                masks_pred_D_sigmoid_A = torch.sigmoid(masks_pred_D)
-                fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid_A], dim=1)
+                masks_pred_D_A, masks_pred_D_fusion_A = net_G_A(imgs)
+                
+                masks_pred_D_softmax_A = F.softmax(masks_pred_D_A,dim=1)
+                fake_patch_D = torch.cat([imgs, masks_pred_D_softmax_A], dim=1)
                 fake_predict_D = net_D(fake_patch_D)
-                fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D)
+                #fake_predict_D_softmax = torch.sigmoid(fake_predict_D)
                 loss_adv_CE_fake = L_adv_BCE(fake_predict_D, fake_labels)
                 loss_adv_CE_fake.backward()
 
@@ -140,17 +158,18 @@ def train_net(net_G,
 
                 #################### train D using true_masks_v ##########################
                 optimizer_D.zero_grad()
+
                 real_patch = torch.cat([imgs, true_masks_v], dim=1)
                 real_predict_D = net_D(real_patch)
                 loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
                 #########################
                 
-                masks_pred_D = net_G_V(imgs)
-                masks_pred_D_sigmoid_V = torch.sigmoid(masks_pred_D)
-                fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid_V], dim=1)
+                masks_pred_D_V, masks_pred_D_fusion_V = net_G_V(imgs)
+                masks_pred_D_softmax_V = F.softmax(masks_pred_D_V,dim=1)
+                fake_patch_D = torch.cat([imgs, masks_pred_D_softmax_V], dim=1)
                 fake_predict_D_V = net_D(fake_patch_D)
-                fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D_V)
+                #fake_predict_D_softmax = F.softmax(fake_predict_D_V)
                 loss_adv_CE_fake = L_adv_BCE(fake_predict_D_V, fake_labels)
                 loss_adv_CE_fake.backward()
 
@@ -164,20 +183,20 @@ def train_net(net_G,
 
                 #################### train D using true_masks##########################
                 optimizer_D.zero_grad()
-                real_patch = torch.cat([imgs, true_masks], dim=1)
+                real_patch = torch.cat([imgs, encode_tensor], dim=1)
                 real_predict_D = net_D(real_patch)
                 loss_adv_CE_real = L_adv_BCE(real_predict_D, real_labels)
                 loss_adv_CE_real.backward()
 
                 #########################
-                masks_pred_D_sigmoid_A_part = masks_pred_D_sigmoid_A.detach()
-                masks_pred_D_sigmoid_V_part = masks_pred_D_sigmoid_V.detach()
+                masks_pred_D_fusion_A = masks_pred_D_fusion_A.detach()
+                masks_pred_D_fusion_V = masks_pred_D_fusion_V.detach()
 
-                masks_pred_D,_,_,_ = net_G(imgs, masks_pred_D_sigmoid_A_part, masks_pred_D_sigmoid_V_part)
-                masks_pred_D_sigmoid = torch.sigmoid(masks_pred_D)
-                fake_patch_D = torch.cat([imgs, masks_pred_D_sigmoid], dim=1)
+                masks_pred_D,_,_,_ = net_G(imgs, masks_pred_D_fusion_A, masks_pred_D_fusion_V)
+                masks_pred_D_softmax = F.softmax(masks_pred_D,dim=1)
+                fake_patch_D = torch.cat([imgs, masks_pred_D_softmax], dim=1)
                 fake_predict_D = net_D(fake_patch_D)
-                fake_predict_D_sigmoid = torch.sigmoid(fake_predict_D)
+                #fake_predict_D_softmax = F.softmax(fake_predict_D)
                 loss_adv_CE_fake = L_adv_BCE(fake_predict_D, fake_labels)
 
                 loss_adv_CE_fake.backward()
@@ -192,15 +211,17 @@ def train_net(net_G,
 
                 ################### train G_A ###########################
                 optimizer_G_A.zero_grad()
-                masks_pred_G = net_G_A(imgs)
-                masks_pred_G_sigmoid_A = torch.sigmoid(masks_pred_G)
-                fake_patch_G = torch.cat([imgs, masks_pred_G_sigmoid_A], dim=1)
+                masks_pred_G_A, masks_pred_D_fusion_A = net_G_A(imgs)
+                masks_pred_G_softmax_A = F.softmax(masks_pred_G_A,dim=1)
+                fake_patch_G = torch.cat([imgs, masks_pred_G_softmax_A], dim=1)
                 fake_predict_G = net_D(fake_patch_G)
-                fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
+                #fake_predict_G_softmax = F.softmax(fake_predict_G)
 
                 loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
-                loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks_a.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid_A, true_masks_a)
+            
+                #loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
+                loss_seg_CE = L_seg_CE(masks_pred_G_A, true_masks)
+                loss_seg_MSE = L_seg_MSE(masks_pred_G_softmax_A, encode_tensor)
 
                 G_Loss = gama_hyper*loss_adv_G_fake + beta_hyper*loss_seg_CE + alpha_hyper*loss_seg_MSE 
                 
@@ -212,15 +233,16 @@ def train_net(net_G,
 
                 ################### train G_V ###########################
                 optimizer_G_V.zero_grad()
-                masks_pred_G = net_G_V(imgs)
-                masks_pred_G_sigmoid_V = torch.sigmoid(masks_pred_G)
-                fake_patch_G = torch.cat([imgs, masks_pred_G_sigmoid_V], dim=1)
+                masks_pred_G_V, masks_pred_D_fusion_V = net_G_V(imgs)
+                masks_pred_G_softmax_V = F.softmax(masks_pred_G_V,dim=1)
+                fake_patch_G = torch.cat([imgs, masks_pred_G_softmax_V], dim=1)
                 fake_predict_G = net_D(fake_patch_G)
-                fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
+                #fake_predict_G_softmax = F.softmax(fake_predict_G)
 
                 loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
-                loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks_v.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid_V, true_masks_v)
+                #loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
+                loss_seg_CE = L_seg_CE(masks_pred_G_V, true_masks)
+                loss_seg_MSE = L_seg_MSE(masks_pred_G_softmax_V, encode_tensor)
                 G_Loss = gama_hyper*loss_adv_G_fake + beta_hyper*loss_seg_CE + alpha_hyper*loss_seg_MSE 
                 
                 epoch_loss_G += G_Loss.item()
@@ -231,29 +253,31 @@ def train_net(net_G,
 
                 ################### train G ###########################
                 optimizer_G.zero_grad()
-                masks_pred_G_sigmoid_A_part = masks_pred_G_sigmoid_A.detach()
-                masks_pred_G_sigmoid_V_part = masks_pred_G_sigmoid_V.detach()
-                masks_pred_G, side_1, side_2, side_3 = net_G(imgs, masks_pred_G_sigmoid_A_part, masks_pred_G_sigmoid_V_part)
-                masks_pred_G_sigmoid = torch.sigmoid(masks_pred_G)
-                side_1_sigmoid = torch.sigmoid(side_1)
-                side_2_sigmoid = torch.sigmoid(side_2)
-                side_3_sigmoid = torch.sigmoid(side_3)
-                fake_patch_G = torch.cat([imgs, masks_pred_G_sigmoid], dim=1)
+                masks_pred_G_A_part = masks_pred_D_fusion_A.detach()
+                masks_pred_G_V_part = masks_pred_D_fusion_V.detach()
+                masks_pred_G, side_1, side_2, side_3 = net_G(imgs, masks_pred_G_A_part, masks_pred_G_V_part)
+                masks_pred_G_softmax = F.softmax(masks_pred_G,dim=1)
+                side_1_softmax = F.softmax(side_1,dim=1)
+                side_2_softmax = F.softmax(side_2,dim=1)
+                side_3_softmax = F.softmax(side_3,dim=1)
+                fake_patch_G = torch.cat([imgs, masks_pred_G_softmax], dim=1)
                 fake_predict_G = net_D(fake_patch_G)
-                fake_predict_G_sigmoid = torch.sigmoid(fake_predict_G)
+                #fake_predict_G_softmax = F.softmax(fake_predict_G)
 
                 loss_adv_G_fake = L_adv_BCE(fake_predict_G, real_labels)
-                loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE = L_seg_MSE(masks_pred_G_sigmoid, true_masks)
+                #loss_seg_CE = L_seg_CE(masks_pred_G.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
+                loss_seg_CE = L_seg_CE(masks_pred_G, true_masks)
+                
+                loss_seg_MSE = L_seg_MSE(masks_pred_G_softmax, encode_tensor)
                 # S1 output
-                loss_seg_CE_1 = L_seg_CE(side_1.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE_1 = L_seg_MSE(side_1_sigmoid, true_masks)
+                loss_seg_CE_1 = L_seg_CE(side_1, true_masks)
+                loss_seg_MSE_1 = L_seg_MSE(side_1_softmax, encode_tensor)
                 # S2 output
-                loss_seg_CE_2 = L_seg_CE(side_2.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE_2 = L_seg_MSE(side_2_sigmoid, true_masks)
+                loss_seg_CE_2 = L_seg_CE(side_2, true_masks)
+                loss_seg_MSE_2 = L_seg_MSE(side_2_softmax, encode_tensor)
                 # S3 output
-                loss_seg_CE_3 = L_seg_CE(side_3.flatten(start_dim=1, end_dim=3), true_masks.flatten(start_dim=1, end_dim=3))
-                loss_seg_MSE_3 = L_seg_MSE(side_3_sigmoid, true_masks)
+                loss_seg_CE_3 = L_seg_CE(side_3, true_masks)
+                loss_seg_MSE_3 = L_seg_MSE(side_3_softmax, encode_tensor)
 
                 G_Loss = gama_hyper*loss_adv_G_fake + beta_hyper*loss_seg_CE + alpha_hyper*loss_seg_MSE + 1/2*(alpha_hyper*loss_seg_MSE_1 + beta_hyper*loss_seg_CE_1) + \
                     1/4*(alpha_hyper*loss_seg_MSE_2 + beta_hyper*loss_seg_CE_2) + 1/8*(alpha_hyper*loss_seg_MSE_3 + beta_hyper*loss_seg_CE_3)
@@ -269,52 +293,53 @@ def train_net(net_G,
 
                 pbar.update(imgs.shape[0])
                 global_step += 1
-                if global_step % (n_train // ( batch_size)) == 0:
-                #if True:
-                    acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse, iou,_ = eval_net(epoch, net_G, net_G_A, net_G_V, args.dataset, val_loader, device, mode='whole',train_or='train')[0:11]
+                with torch.no_grad():
+                    if global_step % (n_train // ( batch_size)) == 0:
+                    #if True:
+                        acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse, iou,_ = eval_net(epoch, net_G, net_G_A, net_G_V, args.dataset, val_loader, device, mode='whole',train_or='train')[0:11]
 
-                    scheduler_G.step(G_Loss.item())
-                    scheduler_D.step(D_Loss.item())
-                    writer.add_scalar('learning_rate', optimizer_G.param_groups[0]['lr'], global_step)
-                    logging.info('Validation sensitivity: {}'.format(sensitivity))
-                    writer.add_scalar('sensitivity/val_G', sensitivity, global_step)
-                    logging.info('Validation specificity: {}'.format(specificity))
-                    writer.add_scalar('specificity/val_G', specificity, global_step)
-                    logging.info('Validation precision: {}'.format(precision))
-                    writer.add_scalar('precision/val_G', precision, global_step)
-                    logging.info('Validation G: {}'.format(G))
-                    writer.add_scalar('G/val_G', G, global_step)
-                    logging.info('Validation F1_score: {}'.format(F1_score_2))
-                    writer.add_scalar('F1_score/val_G', F1_score_2, global_step)
-                    logging.info('Validation mse: {}'.format(mse))
-                    writer.add_scalar('mse/val_G', mse, global_step)
-                    logging.info('Validation iou: {}'.format(iou))
-                    writer.add_scalar('iou/val_G', iou, global_step)
-                    logging.info('Validation acc: {}'.format(acc))
-                    writer.add_scalar('Acc/val_G', acc, global_step)
-                    logging.info('Validation auc_roc: {}'.format(auc_roc))
-                    writer.add_scalar('Auc_roc/val_G', auc_roc, global_step)
-                    logging.info('Validation auc_pr: {}'.format(auc_pr))
-                    writer.add_scalar('Auc_pr/val_G', auc_pr, global_step)
+                        scheduler_G.step(G_Loss.item())
+                        scheduler_D.step(D_Loss.item())
+                        writer.add_scalar('learning_rate', optimizer_G.param_groups[0]['lr'], global_step)
+                        logging.info('Validation sensitivity: {}'.format(sensitivity))
+                        writer.add_scalar('sensitivity/val_G', sensitivity, global_step)
+                        logging.info('Validation specificity: {}'.format(specificity))
+                        writer.add_scalar('specificity/val_G', specificity, global_step)
+                        logging.info('Validation precision: {}'.format(precision))
+                        writer.add_scalar('precision/val_G', precision, global_step)
+                        logging.info('Validation G: {}'.format(G))
+                        writer.add_scalar('G/val_G', G, global_step)
+                        logging.info('Validation F1_score: {}'.format(F1_score_2))
+                        writer.add_scalar('F1_score/val_G', F1_score_2, global_step)
+                        logging.info('Validation mse: {}'.format(mse))
+                        writer.add_scalar('mse/val_G', mse, global_step)
+                        logging.info('Validation iou: {}'.format(iou))
+                        writer.add_scalar('iou/val_G', iou, global_step)
+                        logging.info('Validation acc: {}'.format(acc))
+                        writer.add_scalar('Acc/val_G', acc, global_step)
+                        logging.info('Validation auc_roc: {}'.format(auc_roc))
+                        writer.add_scalar('Auc_roc/val_G', auc_roc, global_step)
+                        logging.info('Validation auc_pr: {}'.format(auc_pr))
+                        writer.add_scalar('Auc_pr/val_G', auc_pr, global_step)
 
-                    prediction_binary = (torch.sigmoid(masks_pred_G) > 0.5)
-                    prediction_binary_gpu = prediction_binary.to(device=device, dtype=mask_type)
-                    total_train_pixel += prediction_binary_gpu.nelement()
-                    real_predict_binary = (torch.sigmoid(real_predict_D) > 0.5)
-                    real_predict_binary_gpu = real_predict_binary.to(device=device, dtype=mask_type)
-                    fake_predict_binary = (torch.sigmoid(fake_predict_D) > 0.5)
-                    fake_predict_binary_gpu = fake_predict_binary.to(device=device, dtype=mask_type)
-                    prediction_binary_DR = real_predict_binary_gpu.eq(real_labels.data).sum().item()
-                    prediction_binary_DF = fake_predict_binary_gpu.eq(fake_labels.data).sum().item()
-                    aver_prediction_binary_D = (prediction_binary_DR + prediction_binary_DF)/2
-                    train_accuracy_D = 100 * aver_prediction_binary_D / total_train_pixel
-                    logging.info('Validation accuracy: {}'.format(train_accuracy_D))
-                    writer.add_scalar('Acc/Val_D', train_accuracy_D, global_step)
-                    
-                    total_train_pixel = 0
-                        
-        if epoch > 1300:
-            if epoch%10==0:
+                        prediction_binary = (F.softmax(masks_pred_G,dim=1) > 0.5)
+                        prediction_binary_gpu = prediction_binary.to(device=device, dtype=mask_type)
+                        total_train_pixel += prediction_binary_gpu.nelement()
+                        real_predict_binary = (F.softmax(real_predict_D,dim=1) > 0.5)
+                        real_predict_binary_gpu = real_predict_binary.to(device=device, dtype=mask_type)
+                        fake_predict_binary = (F.softmax(fake_predict_D,dim=1) > 0.5)
+                        fake_predict_binary_gpu = fake_predict_binary.to(device=device, dtype=mask_type)
+                        prediction_binary_DR = real_predict_binary_gpu.eq(real_labels.data).sum().item()
+                        prediction_binary_DF = fake_predict_binary_gpu.eq(fake_labels.data).sum().item()
+                        aver_prediction_binary_D = (prediction_binary_DR + prediction_binary_DF)/2
+                        train_accuracy_D = 100 * aver_prediction_binary_D / total_train_pixel
+                        logging.info('Validation accuracy: {}'.format(train_accuracy_D))
+                        writer.add_scalar('Acc/Val_D', train_accuracy_D, global_step)
+
+                        total_train_pixel = 0
+
+            if F1_score_2 > best_F1:
+                best_F1=F1_score_2
                 if save_cp:
                     try:
                         os.mkdir(dir_checkpoint)
@@ -322,11 +347,27 @@ def train_net(net_G,
                     except OSError:
                         pass
                     torch.save(net_G.state_dict(),
-                            dir_checkpoint + f'CP_epoch{epoch + 1}_all.pth')
+                            dir_checkpoint + f'CP_best_F1_all.pth')
                     torch.save(net_G_A.state_dict(),
-                            dir_checkpoint + f'CP_epoch{epoch + 1}_A.pth')
+                            dir_checkpoint + f'CP_best_F1_A.pth')
                     torch.save(net_G_V.state_dict(),
-                            dir_checkpoint + f'CP_epoch{epoch + 1}_V.pth')
+                            dir_checkpoint + f'CP_best_F1_V.pth')
+                    logging.info(f'Checkpoint {epoch + 1} saved !')
+
+            if iou > best_iou:
+                best_iou=iou
+                if save_cp:
+                    try:
+                        os.mkdir(dir_checkpoint)
+                        logging.info('Created checkpoint directory')
+                    except OSError:
+                        pass
+                    torch.save(net_G.state_dict(),
+                            dir_checkpoint + f'CP_best_iou_all.pth')
+                    torch.save(net_G_A.state_dict(),
+                            dir_checkpoint + f'CP_best_iou_A.pth')
+                    torch.save(net_G_V.state_dict(),
+                            dir_checkpoint + f'CP_best_iou_V.pth')
                     logging.info(f'Checkpoint {epoch + 1} saved !')
 
 
@@ -362,10 +403,10 @@ if __name__ == '__main__':
 
     img_size = Define_image_size(args.uniform, args.dataset)
 
-    net_G = Generator_main(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
-    net_D = Discriminator(input_channels=6, n_filters = 32, n_classes=3, bilinear=False)
-    net_G_A = Generator_branch(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
-    net_G_V = Generator_branch(input_channels=3, n_filters = 32, n_classes=3, bilinear=False)
+    net_G = Generator_main(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
+    net_D = Discriminator(input_channels=7, n_filters = 32, n_classes=4, bilinear=False)
+    net_G_A = Generator_branch(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
+    net_G_V = Generator_branch(input_channels=3, n_filters = 32, n_classes=4, bilinear=False)
 
     logging.info(f'Network_G:\n'
                  f'\t{net_G.n_channels} input channels\n'
