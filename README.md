@@ -93,10 +93,7 @@ python test.py --batch-size=1 \
 
 The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing) and [Baidu_disk](https://pan.baidu.com/s/12QVrza5seZ63_80Ma26Wtg) with password `tkum`. Download them and place them directly at the project folder (check the load path in test.sh). Then run
 
-```
-sh test.sh
-```
-&nbsp;
+
  
 ## Performance
 
@@ -139,8 +136,6 @@ sh test.sh
 5) Hemelings R, Elen B, Stalmans I, et al. Artery–vein segmentation in fundus images using a fully convolutional network[J]. Computerized Medical Imaging and Graphics, 2019, 76: 101636.
 
 6) Zhou Y, Chen Z, Shen H, et al. A refined equilibrium generative adversarial network for retinal vessel segmentation[J]. Neurocomputing, 2021, 437: 118-130.
-
-&nbsp;
 
 
 ## Citation
