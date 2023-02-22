@@ -1,6 +1,6 @@
-'''
-Yukun Zhou 04/03/2021 
-'''
+# Copyright (c) Yukun Zhou.
+# All rights reserved.
+
 import argparse
 import logging
 import os
@@ -82,8 +82,6 @@ def train_net(net_G,
     L_adv_BCE = nn.BCEWithLogitsLoss()
     
     best_F1 = 0
-    best_iou = 0
-
 
     for epoch in range(epochs):
         net_G.train()
@@ -352,22 +350,6 @@ def train_net(net_G,
                             dir_checkpoint + f'CP_best_F1_A.pth')
                     torch.save(net_G_V.state_dict(),
                             dir_checkpoint + f'CP_best_F1_V.pth')
-                    logging.info(f'Checkpoint {epoch + 1} saved !')
-
-            if iou > best_iou:
-                best_iou=iou
-                if save_cp:
-                    try:
-                        os.mkdir(dir_checkpoint)
-                        logging.info('Created checkpoint directory')
-                    except OSError:
-                        pass
-                    torch.save(net_G.state_dict(),
-                            dir_checkpoint + f'CP_best_iou_all.pth')
-                    torch.save(net_G_A.state_dict(),
-                            dir_checkpoint + f'CP_best_iou_A.pth')
-                    torch.save(net_G_V.state_dict(),
-                            dir_checkpoint + f'CP_best_iou_V.pth')
                     logging.info(f'Checkpoint {epoch + 1} saved !')
 
 

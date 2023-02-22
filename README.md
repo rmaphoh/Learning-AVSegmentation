@@ -49,17 +49,13 @@ There are a few strengths in this work:
 ### Requirements
 
 1. Work on Linux and Windows, but Linux is preferred to replicate the reported performance.
-2. This project is based on pytorch==1.6.0, torchvision==0.7.0, CUDAToolkit==10.1(10.2 is capable), cuDNN==7.5.0
+2. This project is based on pytorch==1.6.0, torchvision==0.7.0, CUDAToolkit==10.1(10.2-11.3 is capable).
 3. A GPU is essential. In our work, we utilise one Tesla T4 with 15 GB of DRAM. If with weaker GPU, we suggest to change the image size setting in `scripts.utils.py`
 
-If you start with building a virtual enviroment using Conda:
-```sh
-$ conda create --name LearningAIM --file conda_requirements.txt
-```
 
 If you already set up your virtual enviroment and just need some packages installation:
-```sh
-$ pip install -r requirements.txt
+```
+pip install -r requirements.txt
 ```
 &nbsp;
 ## Usage
@@ -67,24 +63,38 @@ $ pip install -r requirements.txt
 
 ### Train
 
-```sh
-$ sh train.sh
+Start training, the dataset can be set as DRIVE_AV, LES-AV, or HRF-AV.
 ```
-All checkpoints will be saved in a new folder named with dataset name, e.g., `./HRF-AV`. The writer document will be stored in `./runs` for monitoring the training process. 
-### Test
+python train.py --e=500 \
+                --batch-size=2 \
+                --learning-rate=8e-4 \
+                --v=10.0 \
+                --alpha=0.5 \
+                --beta=1.1 \
+                --gama=0.08 \
+                --dataset=DRIVE_AV \
+                --discriminator=unet \
+                --job_name=DRIVE_AV_randomseed_42 \
+                --uniform=True \
+                --seed_num=42
+```
 
-```sh
-$ sh test.sh
+### Test
+Test the trained model on test set.
 ```
-The segmentation maps are saved in path `.Dataset_name/Final_pre`, e.g., `.HRF-AV/Final_pre`. The `raw_pre` folder includes the images with the same size of raw images while `small_pre` folder contains resized images.
+python test.py --batch-size=1 \
+               --dataset=DRIVE_AV \
+               --job_name=DRIVE_AV_randomseed \
+               --uniform=True
+```
 
 
 ### Pretrained Model
 
 The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing) and [Baidu_disk](https://pan.baidu.com/s/12QVrza5seZ63_80Ma26Wtg) with password `tkum`. Download them and place them directly at the project folder (check the load path in test.sh). Then run
 
-```sh
-$ sh test.sh
+```
+sh test.sh
 ```
 &nbsp;
  
@@ -136,6 +146,16 @@ $ sh test.sh
 ## Citation
 
 ```
+@inproceedings{zhou2021learning,
+  title={Learning to address intra-segment misclassification in retinal imaging},
+  author={Zhou, Yukun and Xu, Moucheng and Hu, Yipeng and Lin, Hongxiang and Jacob, Joseph and Keane, Pearse A and Alexander, Daniel C},
+  booktitle={Medical Image Computing and Computer Assisted Intervention--MICCAI 2021: 24th International Conference, Strasbourg, France, September 27--October 1, 2021, Proceedings, Part I 24},
+  pages={482--492},
+  year={2021},
+  organization={Springer}
+}
+
+
 @article{zhou2022automorph,
   title={AutoMorph: Automated Retinal Vascular Morphology Quantification Via a Deep Learning Pipeline},
   author={Zhou, Yukun and Wagner, Siegfried K and Chia, Mark A and Zhao, An and Xu, Moucheng and Struyven, Robbert and Alexander, Daniel C and Keane, Pearse A and others},

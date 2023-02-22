@@ -1,3 +1,6 @@
+# Copyright (c) Yukun Zhou.
+# All rights reserved.
+
 import argparse
 import os
 import numpy as np
@@ -77,7 +80,8 @@ class Generator_main(nn.Module):
 
         self.up4 = Up_new(2*n_filters, 1*n_filters, bilinear)
         
-        self.outc = OutConv((n_filters+6), n_classes)
+        #self.outc = OutConv((n_filters+8), n_classes)
+        self.outc = OutConv((n_filters), n_classes)
 
 
     def forward(self, x, x_a, x_v):
@@ -96,7 +100,7 @@ class Generator_main(nn.Module):
         s3 = self.S3(x)
         x = self.up4(x, x1)
         
-        x_fusion = torch.cat([x_a, x, x_v], dim=1)
+        x_fusion = torch.mean(torch.stack([x_a, x, x_v],dim=0),dim=0)
         logits = self.outc(x_fusion)
         #logits = self.outc(x)
 
@@ -133,9 +137,9 @@ class Generator_branch(nn.Module):
         x = self.up1(x5, x4)
         x = self.up2(x, x3)
         x = self.up3(x, x2)
-        x = self.up4(x, x1)
-        logits = self.outc(x)
-        return logits
+        x_final = self.up4(x, x1)
+        logits = self.outc(x_final)
+        return logits,x_final
 
 
 
