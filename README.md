@@ -59,7 +59,7 @@ pip install -r requirements.txt
 
 ### Pretrained Model
 
-The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing). Download them and place them directly at the project folder.
+The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1c_UZaq69RmPZjFvccot6GWqnhx2VzFRs?usp=share_link). Download them and unzip them directly at the project folder.
 
 
 ### Train
@@ -94,16 +94,6 @@ python test.py --batch-size=1 \
 
  
 ## Performance
-
-###
-
-| Test dataset  | Sensitivity        | AUC-ROC |    F1-score|  AUC-PR| MSE|
-| ------------- | ------------------ |-------------|------------|-----|----|
-| DRIVE-AV      | 69.83 &pm; 0.22     |     84.2 &pm; 0.1  |    71.26 &pm; 0.07        |  72.41 &pm; 0.06   |  2.92 &pm; 0.01  |
-| LES-AV        | 67.08 &pm; 0.04  |     83.01 &pm; 0.02        |    68.22 &pm; 0.02        |  69.63 &pm; 0.03   |  2.19 &pm; 0.01  |
-| HRF-AV        |       69.19 &pm; 0.16        |     84.15 &pm; 0.08        |       71.92 &pm; 0.04     |  73.65 &pm; 0.02   |  1.94 &pm; 0.01  |
-
-&nbsp;
 
 ### Switch final activation map from sigmoid to softmax
 

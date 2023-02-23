@@ -1,23 +1,14 @@
 # Copyright (c) Yukun Zhou.
 # All rights reserved.
 
-import torch.nn.functional as F
 import argparse
 import logging
-import os
-import sys
 import torch
 import numpy as np
-from tqdm import tqdm
 from scripts.model import Generator_main, Generator_branch
 from scripts.dataset import LearningAVSegData
 from torch.utils.data import DataLoader
-from torchvision.utils import save_image
-from PIL import Image
-from scipy.special import expit
 from scripts.eval import eval_net
-from skimage import filters
-import pandas as pd
 from scripts.utils import Define_image_size
 
 
@@ -25,18 +16,17 @@ def test_net(net_all, net_a, net_v, loader, device, mode, dataset_train):
 
     epoch = 0
 
-    acc, sent, spet, pret, G_t, F1t, auc_roct, auc_prt, mset, iout, \
-        acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, auc_roct_a, auc_prt_a, mset_a, iout_a, \
-            acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, auc_roct_v, auc_prt_v, mset_v, iout_v, \
-                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u  = eval_net(epoch, net_all, net_a, net_v, dataset_train, loader=loader, device=device, mode = mode, train_or='val')
+    acc, sent, spet, pret, G_t, F1t, mset, iout, \
+        acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, mset_a, iout_a, \
+            acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, mset_v, iout_v, \
+                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, mset_u, iout_u  = eval_net(epoch, net_all, net_a, net_v, dataset_train, loader=loader, device=device, mode = mode, train_or='val')
 
     
     if mode != 'vessel':
-        #return acc, sensitivity, specificity, precision, G, F1_score_2, auc_roc, auc_pr, mse
-        return acc, sent, spet, pret, G_t, F1t, auc_roct, auc_prt, mset, iout, \
-                acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, auc_roct_a, auc_prt_a, mset_a, iout_a, \
-                acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, auc_roct_v, auc_prt_v, mset_v, iout_v, \
-                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u
+        return acc, sent, spet, pret, G_t, F1t, mset, iout, \
+                acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, mset_a, iout_a, \
+                acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, mset_v, iout_v, \
+                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, mset_u, iout_u
     else:
         return acc, sensitivity, specificity, precision, G, F1_score_2
     
@@ -77,8 +67,6 @@ if __name__ == '__main__':
     precision_total_a = []
     G_total_a = []
     F1_score_2_total_a = []
-    auc_roc_total_a = []
-    auc_pr_total_a = []
     mse_total_a = []
     iou_total_a = []
 
@@ -88,8 +76,6 @@ if __name__ == '__main__':
     precision_total_v = []
     G_total_v = []
     F1_score_2_total_v = []
-    auc_roc_total_v = []
-    auc_pr_total_v = []
     mse_total_v = []
     iou_total_v = []
 
@@ -99,8 +85,6 @@ if __name__ == '__main__':
     precision_total_u = []
     G_total_u = []
     F1_score_2_total_u = []
-    auc_roc_total_u = []
-    auc_pr_total_u = []
     mse_total_u = []
     iou_total_u = []
 
@@ -110,8 +94,6 @@ if __name__ == '__main__':
     precision_total = []
     G_total = []
     F1_score_2_total = []
-    auc_roc_total = []
-    auc_pr_total = []
     mse_total = []
     iou_total = []
 
@@ -137,10 +119,10 @@ if __name__ == '__main__':
 
 
         if mode != 'vessel':
-            acc, sent, spet, pret, G_t, F1t, auc_roct, auc_prt, mset, iout, \
-                acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, auc_roct_a, auc_prt_a, mset_a, iout_a, \
-                acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, auc_roct_v, auc_prt_v, mset_v, iout_v, \
-                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, auc_roct_u, auc_prt_u, mset_u, iout_u = test_net(net_all=net_G, net_a=net_G_A, net_v=net_G_V, loader=test_loader, device=device, mode=mode, dataset_train=dataset_name)
+            acc, sent, spet, pret, G_t, F1t, mset, iout, \
+                acc_a, sent_a, spet_a, pret_a, G_t_a, F1t_a, mset_a, iout_a, \
+                acc_v, sent_v, spet_v, pret_v, G_t_v, F1t_v, mset_v, iout_v, \
+                acc_u, sent_u, spet_u, pret_u, G_t_u, F1t_u, mset_u, iout_u = test_net(net_all=net_G, net_a=net_G_A, net_v=net_G_V, loader=test_loader, device=device, mode=mode, dataset_train=dataset_name)
 
     #########################################3
         acc_total_a.append(acc_a)
