@@ -53,12 +53,17 @@ There are a few strengths in this work:
 3. A GPU is essential. In our work, we utilise one Tesla T4 with 15 GB of DRAM. If with weaker GPU, we suggest to change the image size setting in `scripts.utils.py`
 
 
-If you already set up your virtual enviroment and just need some packages installation:
+Packages installation:
 ```
 pip install -r requirements.txt
 ```
 &nbsp;
 ## Usage
+
+
+### Pretrained Model
+
+The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing). Download them and place them directly at the project folder.
 
 
 ### Train
@@ -80,7 +85,7 @@ python train.py --e=500 \
 ```
 
 ### Test
-Test the trained model on test set.
+Test the trained models.
 ```
 python test.py --batch-size=1 \
                --dataset=DRIVE_AV \
@@ -89,9 +94,6 @@ python test.py --batch-size=1 \
 ```
 
 
-### Pretrained Model
-
-The pretrained model are provided in [Google_DRIVE](https://drive.google.com/drive/folders/1_Urz28pn406Q4MqHMtCydKB5Rf_rdCx7?usp=sharing) and [Baidu_disk](https://pan.baidu.com/s/12QVrza5seZ63_80Ma26Wtg) with password `tkum`. Download them and place them directly at the project folder (check the load path in test.sh). Then run
 
 
  
